@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced DevOps Pipeline Project Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 
+    Chosen Palette: Calm Skies & Warm Sand. 
+    Using bg-gray-50/bg-white as the warm sand (neutrals) and shades of blue (blue-600, blue-700) as the calm sky (accent).
+    -->
+    
+    <!-- 
+    Application Structure Plan: 
+    The SPA is structured as a single-page dashboard, deviating from the report's linear 1, 2, 3 format.
+    1.  Sticky Navigation: Provides quick access to the four key areas: Overview, Architecture, Pipeline, and Lessons.
+    2.  Overview: A "dashboard" view summarizing the project goal and the final status of all services (from the report's table) as interactive cards, which is more visually engaging. It also includes a new chart to synthesize the "project journey" itself.
+    3.  Architecture & Pipeline: These sections are dedicated "code artifact" views, presenting the 'docker-compose.yml' and 'Jenkinsfile' in clean, scrollable <pre> blocks for easy review and copying.
+    4.  Lessons Learned: This is the primary interactive component. It transforms the dense "Troubleshooting Journey" table into an interactive accordion. This is far more user-friendly for exploration.
+    This structure prioritizes user exploration by theme (Status, Code, Lessons) rather than a simple document flow.
+    -->
+    
+    <!-- 
+    Visualization & Content Choices:
+    1.  Report Info: Architecture Status Table -> Goal: Inform (Current State) -> Viz: Interactive Status Cards (HTML/Tailwind) -> Interaction: Hover (slight shadow/lift) -> Justification: More modern and scannable than a plain table.
+    2.  Report Info: Project Journey (Implied by 10 lessons) -> Goal: Synthesize & Organize -> Viz: Horizontal Bar Chart (Chart.js) -> Interaction: Tooltip on hover -> Justification: Visualizes the project's lifecycle, which is a key (but unstated) part of the report's narrative. -> Library: Chart.js (Canvas).
+    3.  Report Info: 'docker-compose.yml' code -> Goal: Inform (Reference) -> Viz: Styled <pre><code> block (HTML/Tailwind) -> Interaction: Horizontal scroll -> Justification: Best way to display raw code verbatim.
+    4.  Report Info: 'Jenkinsfile' code -> Goal: Inform (Reference) -> Viz: Styled <pre><code> block (HTML/Tailwind) -> Interaction: Horizontal scroll -> Justification: Best way to display raw code verbatim.
+    5.  Report Info: Troubleshooting Table (10 Lessons) -> Goal: Organize & Explore (Lessons) -> Viz: Interactive Accordion (HTML/Tailwind/JS) -> Interaction: Click to expand/collapse -> Justification: Transforms a dense, hard-to-read table into an interactive, explorable learning log. This is the main interactive "wow" factor for user engagement.
+    -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* bg-gray-50 */
+        }
+        
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* max-w-2xl */
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px; /* h-64 */
+            max-height: 250px;
+        }
+
+        pre {
+            background-color: #f3f4f6; /* bg-gray-100 */
+            color: #1f2937; /* text-gray-800 */
+            padding: 1rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            overflow-x: auto;
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.6;
+        }
+        
+        .accordion-content {
+            transition: max-height 0.3s ease-out;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="text-gray-700">
+
+    <!-- Sticky Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="text-xl font-bold text-gray-800">DevOps Project Report</div>
+            <div class="space-x-4">
+                <a href="#overview" class="text-gray-600 hover:text-blue-600">Overview</a>
+                <a href="#architecture" class="text-gray-600 hover:text-blue-600">Architecture</a>
+                <a href="#pipeline" class="text-gray-600 hover:text-blue-600">Pipeline</a>
+                <a href="#lessons" class="text-gray-600 hover:text-blue-600">Lessons Learned</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-6 pt-20"> <!-- pt-20 to offset sticky nav -->
+
+        <!-- Section 1: Overview -->
+        <section id="overview" class="mb-16">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Advanced CI/CD Project Dashboard</h1>
+            <p class="text-lg text-gray-600 mb-8">
+                This report summarizes the implementation of a continuous integration (CI), continuous delivery (CD), code quality, and observability pipeline using Jenkins, SonarQube, Prometheus, and Grafana, running locally via Docker Compose.
+            </p>
+
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Final System Status</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
+                <!-- Status Cards Generated from Report Table -->
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                    <div class="font-semibold text-gray-800">Jenkins</div>
+                    <div class="text-sm text-gray-500 mb-2">CI/CD Orchestration</div>
+                    <div class="text-right font-bold text-green-600">Operational &#10003;</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                    <div class="font-semibold text-gray-800">SonarQube</div>
+                    <div class="text-sm text-gray-500 mb-2">Code Quality</div>
+                    <div class="text-right font-bold text-green-600">Operational &#10003;</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                    <div class="font-semibold text-gray-800">Prometheus</div>
+                    <div class="text-sm text-gray-500 mb-2">Metrics Collection</div>
+                    <div class="text-right font-bold text-green-600">Operational &#10003;</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                    <div class="font-semibold text-gray-800">Grafana</div>
+                    <div class="text-sm text-gray-500 mb-2">Observability</div>
+                    <div class="text-right font-bold text-green-600">Operational &#10003;</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-gray-200 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                    <div class="font-semibold text-gray-800">python-app</div>
+                    <div class="text-sm text-gray-500 mb-2">Deployed Application</div>
+                    <div class="text-right font-bold text-green-600">Operational &#10003;</div>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Project Journey Phases</h2>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <p class="text-gray-600 mb-4">The project was built in iterative phases, from initial setup and integration to a fully operational, observable pipeline with advanced CD.</p>
+                <div class="chart-container">
+                    <canvas id="phasesChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Architecture -->
+        <section id="architecture" class="mb-16">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">System Architecture: `docker-compose.yml`</h2>
+            <p class="text-gray-600 mb-6">
+                The entire stack is defined in this single `docker-compose.yml` file. It configures all four services (Jenkins, SonarQube, Prometheus, Grafana) and establishes the shared network and critical volume mounts for persistence and host code access.
+            </p>
+            <pre><code class="language-yaml">version: '3.8'
+
+networks:
+  devops-net:
+    driver: bridge
+
+volumes:
+  jenkins_home:
+  sonarqube_data:
+  prometheus_data:
+  grafana_data:
+
+services:
+  # 1. Jenkins CI Server
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    privileged: true
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Critical: Mounts local code for the pipeline to access
+      - /home/hr265/sample-app:/host_project
+    networks:
+      - devops-net
+    container_name: jenkins
+    restart: unless-stopped
+
+  # 2. SonarQube Code Quality Server
+  sonarqube:
+    image: sonarqube:lts-community
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    # Runs on 9001 to avoid common host conflicts
+    ports:
+      - "9001:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+    networks:
+      - devops-net
+    container_name: sonarqube
+    restart: unless-stopped
+
+  # 3. Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - devops-net
+    container_name: prometheus
+    restart: unless-stopped
+
+  # 4. Grafana Observability/Visualization
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - devops-net
+    container_name: grafana
+    restart: unless-stopped
+</code></pre>
+        </section>
+
+        <!-- Section 3: Pipeline -->
+        <section id="pipeline" class="mb-16">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Pipeline as Code: `Jenkinsfile`</h2>
+            <p class="text-gray-600 mb-6">
+                This script defines the entire CI/CD logic. A key feature is the "Code Checkout & Tool Install" stage, which self-installs all necessary dependencies (Sonar Scanner, Docker CLI) within the ephemeral Jenkins agent, making the pipeline fully self-contained and portable.
+            </p>
+            <pre><code class="language-groovy">// Jenkinsfile (Final Working CD Script)
+pipeline {
+    agent any
+
+    environment {
+        // Variables for Docker and Sonar Scanner paths
+        DOCKER_USER = 'hr265docker' 
+        IMAGE_NAME = 'sample-python-app'
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
+        SCANNER_HOME = "/usr/local/bin/sonar-scanner-5.0.1.3006-linux" 
+        APP_CONTAINER_NAME = 'python-app'
+    }
+
+    stages {
+        stage('Code Checkout & Tool Install') {
+            steps {
+                echo "1. Copying source files from host volume mount..."
+                sh 'cp -v /host_project/Dockerfile .'
+                sh 'cp -v /host_project/app.py .'
+                
+                echo "2. Installing all necessary dependencies..."
+                // Install base tools for apt, wget, unzip
+                sh 'apt-get update && apt-get install -y wget unzip apt-transport-https ca-certificates curl gnupg'
+                
+                // --- SonarQube Scanner Install (Self-Contained) ---
+                sh '''
+                    wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+                    unzip -o -q sonar-scanner-cli-5.0.1.3006-linux.zip -d /usr/local/bin/
+                    rm sonar-scanner-cli-5.0.1.3006-linux.zip
+                '''
+                
+                // --- Docker CLI Install (Self-Contained) ---
+                sh 'curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor --batch --yes -o /etc/apt/keyrings/docker.gpg'
+                sh 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian trixie stable" > /etc/apt/sources.list.d/docker.list'
+                sh 'apt-get update'
+                sh 'apt-get install -y docker-ce-cli'
+                
+                echo "Tools ready."
+            }
+        }
+
+        stage('Run SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube Local Server') {
+                    // Uses the absolute path determined during troubleshooting
+                    sh "$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectKey=my_sample_app -Dsonar.sources=."
+                }
+            }
+        }
+
+        stage('Quality Gate Check') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    // Set to false to allow CD stages to run despite the ERROR status (if code fix fails)
+                    waitForQualityGate abortPipeline: false
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "Building Docker image: ${env.DOCKER_USER}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                sh "docker build -t ${env.DOCKER_USER}/${env.IMAGE_NAME}:${env.IMAGE_TAG} ."
+                sh "docker tag ${env.DOCKER_USER}/${env.IMAGE_NAME}:${env.IMAGE_TAG} ${env.DOCKER_USER}/${env.IMAGE_NAME}:latest"
+            }
+        }
+
+        stage('Deploy/Publish') {
+            steps {
+                echo "Deploying container ${env.IMAGE_TAG} to Host System via Docker Socket..."
+                
+                // 1. Stop and remove the previous container instance (using the host's Docker Daemon)
+                sh "docker stop ${env.APP_CONTAINER_NAME} || true"
+                sh "docker rm ${env.APP_CONTAINER_NAME} || true"
+                
+                // 2. Run the new application container image on the NEW, SAFE PORT 8083
+                sh "docker run -d --name ${env.APP_CONTAINTER_NAME} -p 8083:80 ${env.DOCKER_USER}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                
+                echo "Deployment Complete. Application running on Host port 8083."
+            }
+        }
+    }
+}
+</code></pre>
+        </section>
+
+        <!-- Section 4: Lessons Learned (Interactive Accordion) -->
+        <section id="lessons" class="mb-16">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">Troubleshooting Journey & Lessons Learned</h2>
+            <p class="text-gray-600 mb-6">
+                The project's success depended on overcoming 10 key challenges. Click each item to see the root cause and the final resolution.
+            </p>
+            <div id="accordion-container" class="space-y-2">
+                <!-- Accordion items will be injected by JavaScript -->
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center p-6 border-t border-gray-200 bg-white">
+        <p class="text-sm text-gray-500">Interactive Project Report generated from `devops_project_report.md`.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. Phases Chart (Chart.js) ---
+            const ctx = document.getElementById('phasesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['1. Setup', '2. Integration', '3. CI/Quality', '4. Containerization (CD)', '5. Observability'],
+                    datasets: [{
+                        label: 'Project Phase Completion',
+                        data: [1, 2, 3, 4, 5],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.2)', // blue
+                            'rgba(59, 130, 246, 0.4)',
+                            'rgba(59, 130, 246, 0.6)',
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)' // green for final
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' Phase ' + context.formattedValue + ' Complete';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: false,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 14,
+                                    weight: '500'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // --- 2. Accordion Data (from Report Section III) ---
+            const lessons = [
+                {
+                    error: "Bind for 9000 failed: port is already allocated",
+                    cause: "Port Conflict: A previously stopped or failed Docker container (sonarqube or grafana) was still holding the host port.",
+                    resolution: "Forced stop/removal of conflicting containers (docker stop/rm) and finally changed SonarQube host port to 9001."
+                },
+                {
+                    error: "...sonar-scanner: not found (exit code 127)",
+                    cause: "Missing Executable: The sonar-scanner binary was not on the Jenkins agent's PATH. The 'Install automatically' feature failed.",
+                    resolution: "CRITICAL FIX: Manually installed the scanner inside the Jenkins container (using wget/unzip) and used the hardcoded absolute path in the Jenkinsfile."
+                },
+                {
+                    error: "Groovy Syntax: unexpected char: # or Invalid tool type",
+                    cause: "Syntax Error: Declarative Pipeline requires specific aliases for tools, and comments (#) are illegal in the environment block.",
+                    resolution: "Removed the invalid 'tools' block and fixed illegal characters in Groovy syntax."
+                },
+                {
+                    error: "Cancelling nested steps due to timeout (Quality Gate)",
+                    cause: "Missing Webhook: SonarQube successfully analyzed the code but could not tell Jenkins the status, causing Jenkins to wait and timeout.",
+                    resolution: "CRITICAL FIX: Configured the SonarQube Webhook (http://jenkins:8080/sonarqube-webhook/) to enable communication back to Jenkins."
+                },
+                {
+                    error: "Quality gate is 'ERROR' (Pipeline Abort)",
+                    cause: "Strict Quality Gate: The code (even simple app.py) violated the default strict rules (e.g., 0% coverage, reliability rating).",
+                    resolution: "Created a new, permissive Quality Gate ('CI_Demo_Passing_Gate') in SonarQube checking only for 'Bugs <= 0' and set it as default."
+                },
+                {
+                    error: "Quality Gate Fails (Final)",
+                    cause: "Code Quality/Syntax Issue: The Python code was missing docstrings, causing SonarQube to flag a bug that failed the new quality gate.",
+                    resolution: "Applied Python best practice (added docstrings) to app.py to satisfy the '0 Bugs' Quality Gate condition."
+                },
+                {
+                    error: "open Dockerfile: no such file or directory",
+                    cause: "Missing Volume Mount: The Jenkins workspace was empty because the container could not access the host's arbitrary directory (/home/hr265/sample-app).",
+                    resolution: "CRITICAL FIX: Added a Volume Mount (- /home/hr265/sample-app:/host_project) to docker-compose.yml and updated the pipeline to cp from /host_project."
+                },
+                {
+                    error: "docker: not found",
+                    cause: "Missing Docker Client: The docker executable was missing from the Jenkins agent's PATH, similar to the Sonar Scanner issue.",
+                    resolution: "CRITICAL FIX: Added self-install steps (apt-get install -y docker-ce-cli) to the pipeline to ensure the client is installed during the job run."
+                },
+                {
+                    error: "Container ... is restarting (Deploy)",
+                    cause: "Unstable Target: The initial app-target container (alpine/git) was unstable due to its startup command failing in Docker's orchestration.",
+                    resolution: "Swapped the deployment image to alpine:latest and used the stable command tail -f /dev/null in docker-compose.yml."
+                },
+                {
+                    error: "Bind for 8082 failed: port is already allocated",
+                    cause: "Deployment Port Conflict: The deployment failed because host port 8082 was already in use by a zombie container or another host process.",
+                    resolution: "Changed the application host port one final time from 8082:80 to the successful 8083:80 in the docker run command."
+                }
+            ];
+
+            // --- 3. Accordion Builder ---
+            const container = document.getElementById('accordion-container');
+            lessons.forEach((lesson, index) => {
+                const item = document.createElement('div');
+                item.className = 'accordion-item bg-white shadow-md rounded-lg overflow-hidden border border-gray-200';
+
+                const header = document.createElement('button');
+                header.className = 'accordion-header w-full text-left p-4 font-semibold text-gray-800 flex justify-between items-center transition-colors hover:bg-gray-50';
+                header.innerHTML = `
+                    <span><span class="text-blue-600 font-bold">Lesson #${index + 1}:</span> ${lesson.error}</span>
+                    <span class="accordion-icon text-blue-600 font-bold text-2xl">+</span>
+                `;
+
+                const content = document.createElement('div');
+                content.className = 'accordion-content p-4 bg-gray-50 border-t border-gray-200 hidden';
+                content.style.maxHeight = '0px';
+                content.innerHTML = `
+                    <h4 class="font-semibold text-gray-700 mb-1">Root Cause & Lesson:</h4>
+                    <p class="mb-4 text-gray-600">${lesson.cause}</p>
+                    <h4 class="font-semibold text-gray-700 mb-1">Resolution:</h4>
+                    <p class="text-gray-600">${lesson.resolution}</p>
+                `;
+
+                header.addEventListener('click', () => {
+                    const icon = header.querySelector('.accordion-icon');
+                    const isHidden = content.classList.toggle('hidden');
+
+                    if (isHidden) {
+                        content.style.maxHeight = '0px';
+                        icon.textContent = '+';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        icon.textContent = '−';
+                    }
+                });
+
+                item.appendChild(header);
+                item.appendChild(content);
+                container.appendChild(item);
+            });
+
+            // --- 4. Smooth Scrolling for Nav ---
+            document.querySelectorAll('nav a').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
